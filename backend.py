@@ -37,6 +37,28 @@ Here's the context from the NVCA legal documents:
 Here's the user's question:"
 """
 
+PROMPT_SUMMARY = """
+Considering the summary compiled so far 
+
+Summary: "{current_summary_record}"
+
+and the new text segments
+
+
+"{new_text_segments}"
+
+
+please generate a concise and understandable summary specifically tailored for entrepreneurs.
+This summary should clearly highlight the main legal points, funding advice, and regulations that could impact their startup journey, distilled from the document. 
+The goal is to enable entrepreneurs to quickly grasp the key elements of the document, understanding how it can aid them in navigating potential legal pitfalls and financial management challenges. 
+Ensure that the summary is succinct, accessible, and directly relevant to their practical needs.
+"""
+
+PROMPT_TITLE = """
+Based on the detailed summary "{summary}", create a one-sentence overview that captures the essence and most critical advice for entrepreneurs. 
+This sentence should succinctly convey the key legal and financial insights that are vital for startup success, emphasizing the most actionable and impactful guidance derived from the document.
+"""
+
 
 PROMPT_GLOSSARY = """
 Analyze the text from an NVCA legal document provided here: 
@@ -157,6 +179,31 @@ def doc_to_glossary(uri):
     return new_results
 
 
+def doc_to_summary(uri):
+    from unstructured.partition.auto import partition
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    from superduperdb.ext.openai import OpenAIChatCompletion
+
+    elements = partition(uri)
+
+    text = "\n".join([e.text for e in elements])
+
+    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        encoding_name="cl100k_base", chunk_size=10000, chunk_overlap=1000
+    )
+    texts = text_splitter.split_text(text)
+    llm = OpenAIChatCompletion(model="gpt-3.5-turbo", identifier="my-chat")
+    current_summary_record = ""
+    for i, text in enumerate(texts):
+        print(f"Processing text {i+1}/{len(texts)}")
+        prompt = PROMPT_SUMMARY.format(
+            current_summary_record=current_summary_record, new_text_segments=text
+        )
+        current_summary_record = llm.predict_one(prompt)
+
+    return current_summary_record
+
+
 def setup_db(reset=False):
     os.makedirs(".cache", exist_ok=True)
     mongodb_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017/nvca")
@@ -260,6 +307,19 @@ def setup_db(reset=False):
         )
     )
 
+    model_summary = Model(
+        identifier="summary",
+        object=doc_to_summary,
+    )
+
+    db.add(
+        Listener(
+            select=collection_documents.find({}),
+            key="uri",
+            model=model_summary,
+        )
+    )
+
     from superduperdb.ext.openai.model import OpenAIEmbedding
 
     model = OpenAIEmbedding(
@@ -347,6 +407,27 @@ def get_query_return_nums(db, collection, query=None):
     select = collection.count_documents(query)
     result = db.execute(select)
     return result
+
+
+def list_documents(db):
+    import hashlib
+
+    datas = []
+    for data in list(Collection("documents").find().execute(db)):
+        data["_id"] = str(data["_id"])
+        summary = data.outputs("uri", "summary")
+        uri = data["uri"]
+        base_path = int(hashlib.sha1(uri.encode("utf-8")).hexdigest(), 16) % (10**8)
+        base_path = ".cache/" + str(base_path) + ".pdf"
+        datas.append(
+            {
+                "_id": data["_id"],
+                "uri": uri,
+                "summary": summary,
+                "base_path": base_path,
+            }
+        )
+    return datas
 
 
 def preprocess_query(query):

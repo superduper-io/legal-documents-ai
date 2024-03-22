@@ -12,6 +12,7 @@ from backend import (
     predict,
     setup_db,
     list_glossary,
+    list_documents,
     query_database,
     get_query_return_nums,
 )
@@ -49,11 +50,25 @@ def main(reset):
     st.write(templates.load_css(), unsafe_allow_html=True)
     # switch between pages
     if layout == "NVCA Legal Docs Chat / Search":
-        [tab_qa, tab_glossary, tab_query] = st.tabs(["Chat", "Glossary", "Query"])
+        [
+            tab_qa,
+            tab_glossary,
+            tab_documents,
+            tab_query,
+        ] = st.tabs(
+            [
+                "Chat",
+                "Glossary",
+                "Documents",
+                "Query",
+            ]
+        )
         with tab_qa:
             app_qa(db)
         with tab_glossary:
             app_glossary(db)
+        with tab_documents:
+            app_documents(db)
         with tab_query:
             app_query(db)
     elif layout == "Add PDF file":
@@ -172,21 +187,45 @@ def app_glossary(db):
         render_contexts(search, contexts)
 
 
+def app_documents(db):
+    st.subheader("Documents")
+    documents = list_documents(db)
+    uris = [doc["uri"] for doc in documents]
+    selected_uri = st.selectbox("Choose a document to view:", uris)
+    selected_doc = [doc for doc in documents if doc["uri"] == selected_uri][0]
+    url = f"http://{IP}:8000/" + selected_doc["base_path"]
+    st.write(f"**[View document]({url})**")
+    st.markdown("#### Summary")
+    st.write(selected_doc["summary"])
+
+    # st.markdown("### Quickly Chat With AI On This Document")
+    # search = st.text_input("Input your question:")
+    # if search.strip():
+    #     answer, contexts = predict(db, search)
+    #
+    #     st.write("##### Response:")
+    #     st.write(answer)
+    #
+    #     render_contexts(search, contexts)
+
+
 def reset_selected_index():
     st.session_state["selected_index_str"] = None
+
 
 def app_query(db):
     st.subheader("Query")
     collection_names = sorted(db.databackend.db.list_collection_names(), reverse=True)
-    
+
     selected_collection = st.selectbox(
         "Choose a collection to search in:",
         collection_names,
         on_change=reset_selected_index,
     )
-    
+
     query_string = st.text_area(
-        "Please input query (JSON format)", "{}",
+        "Please input query (JSON format)",
+        "{}",
         on_change=reset_selected_index,
     )
 
@@ -217,7 +256,9 @@ def app_query(db):
             )
 
         selected_index = int(current_selection) - 1
-        st.session_state["selected_index_str"] = current_selection  # 更新session_state以反映当前选择
+        st.session_state[
+            "selected_index_str"
+        ] = current_selection
 
         datas = query_database(
             db, selected_collection, query_dict, skip=selected_index, limit=1
@@ -230,6 +271,7 @@ def app_query(db):
                 st.write("No result found")
     else:
         st.write("No result found")
+
 
 if __name__ == "__main__":
     main()
