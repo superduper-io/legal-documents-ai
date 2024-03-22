@@ -147,8 +147,11 @@ def doc_to_glossary(uri):
     term_set = set()
     new_results = []
     for result in results:
-        term = result.get("term", "").lower()
-        if not term or term in term_set:
+        try:
+            term = result.get("term", "").lower()
+            if not term or term in term_set:
+                continue
+        except:
             continue
 
         new_results.append(result)
