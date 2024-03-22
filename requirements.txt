@@ -1,0 +1,10 @@
+ipython
+git+https://github.com/SuperDuperDB/superduperdb.git#egg=superduperdb
+langchain
+spacy
+streamlit
+PyPDF2
+openai
+pycryptodome==3.15.0
+unstructured[pdf,doc,docx]
+tiktoken
