@@ -18,6 +18,8 @@ from backend import (
 )
 
 IP = os.environ.get("PDF_FILE_SERVICE_HOST", "localhost")
+LOGO_URL = "https://raw.githubusercontent.com/SuperDuperDB/superduperdb/main/docs/hr/static/img/SuperDuperDB_logo_color.svg"
+logo_html = f"<img src='{LOGO_URL}' class='img-fluid' alt='Logo' style='height: 60px;'>"
 
 
 def set_session_state():
@@ -43,7 +45,9 @@ def set_session_state():
 @click.command()
 @click.option("--reset", is_flag=True, help="Reset the database.")
 def main(reset):
-    st.subheader("SuperDuperDB Demo Application", divider="rainbow")
+    st.set_page_config(page_title="SuperDuperDB Application", page_icon=":crystal_ball:")
+    st.markdown(logo_html, unsafe_allow_html=True)
+    st.header("Demo App: NVCA Legal Docs Chat / Search", divider="violet")
     set_session_state()
     db = st.cache_resource(setup_db)(reset=reset)
     layout = st.sidebar.radio("", ["NVCA Legal Docs Chat / Search", "Add PDF file"])
@@ -90,7 +94,6 @@ def app_qa(db):
     """search layout"""
     # load css
     page_size = 20
-    st.subheader("NVCA Legal Docs Chat / Search")
     if st.session_state.search is None:
         search = st.text_input("Enter search query:")
     else:
@@ -167,7 +170,6 @@ def render_contexts(search, contexts, from_i=0):
 
 
 def app_glossary(db):
-    st.subheader("Glossary")
     glossaries = list_glossary(db)
     item2data = {data["item"]: data for data in glossaries}
     item_list = sorted(item2data.keys())
@@ -188,7 +190,6 @@ def app_glossary(db):
 
 
 def app_documents(db):
-    st.subheader("Documents")
     documents = list_documents(db)
     uris = [doc["uri"] for doc in documents]
     selected_uri = st.selectbox("Choose a document to view:", uris)
@@ -214,7 +215,6 @@ def reset_selected_index():
 
 
 def app_query(db):
-    st.subheader("Query")
     collection_names = sorted(db.databackend.db.list_collection_names(), reverse=True)
 
     selected_collection = st.selectbox(

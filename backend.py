@@ -98,7 +98,7 @@ def load_init_urls():
     files = []
     if DOCUMENTS_FODLER and os.path.exists(DOCUMENTS_FODLER):
         for file in os.listdir(DOCUMENTS_FODLER):
-            if file.endswith(".docx"):
+            if file.endswith(".docx") or file.endswith(".doc"):
                 files.append(f"{DOCUMENTS_FODLER}/{file}")
     return files
 
