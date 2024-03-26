@@ -50,33 +50,28 @@ def main(reset):
     st.header("Demo App: NVCA Legal Docs Chat / Search", divider="violet")
     set_session_state()
     db = st.cache_resource(setup_db)(reset=reset)
-    layout = st.sidebar.radio("", ["NVCA Legal Docs Chat / Search", "Add PDF file"])
     st.write(templates.load_css(), unsafe_allow_html=True)
-    # switch between pages
-    if layout == "NVCA Legal Docs Chat / Search":
+    [
+        tab_qa,
+        tab_glossary,
+        tab_documents,
+        tab_query,
+    ] = st.tabs(
         [
-            tab_qa,
-            tab_glossary,
-            tab_documents,
-            tab_query,
-        ] = st.tabs(
-            [
-                "Chat",
-                "Glossary",
-                "Documents",
-                "Query",
-            ]
-        )
-        with tab_qa:
-            app_qa(db)
-        with tab_glossary:
-            app_glossary(db)
-        with tab_documents:
-            app_documents(db)
-        with tab_query:
-            app_query(db)
-    elif layout == "Add PDF file":
-        app_add_url(db)
+            "Chat",
+            "Glossary",
+            "Documents",
+            "Query",
+        ]
+    )
+    with tab_qa:
+        app_qa(db)
+    with tab_glossary:
+        app_glossary(db)
+    with tab_documents:
+        app_documents(db)
+    with tab_query:
+        app_query(db)
 
 
 def app_add_url(db):
