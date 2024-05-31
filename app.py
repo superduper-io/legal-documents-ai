@@ -45,7 +45,8 @@ def set_session_state():
 def main(reset):
     st.set_page_config(page_title="SuperDuperDB Application", page_icon=":crystal_ball:")
     st.logo(LOGO_URL)
-    st.header("SuperDuper App Demo: NVCA Legal Docs - RAG")
+    st.header("SuperDuper App Demo:")
+    st.subheader("NVCA Legal Docs - RAG")
     set_session_state()
     db = st.cache_resource(setup_db)(reset=reset)
     st.write(templates.load_css(), unsafe_allow_html=True)
