@@ -18,9 +18,7 @@ from backend import (
 )
 
 IP = os.environ.get("PDF_FILE_SERVICE_HOST", "localhost")
-LOGO_URL = "https://raw.githubusercontent.com/SuperDuperDB/superduperdb/main/docs/hr/static/img/SuperDuperDB_logo_color.svg"
-logo_html = f"<img src='{LOGO_URL}' class='img-fluid' alt='Logo' style='height: 60px;'>"
-
+LOGO_URL = "https://superduperdb-public-demo.s3.amazonaws.com/superduper_logo.png"
 
 def set_session_state():
     """ """
@@ -46,8 +44,8 @@ def set_session_state():
 @click.option("--reset", is_flag=True, help="Reset the database.")
 def main(reset):
     st.set_page_config(page_title="SuperDuperDB Application", page_icon=":crystal_ball:")
-    st.markdown(logo_html, unsafe_allow_html=True)
-    st.header("Demo App: NVCA Legal Docs Chat / Search", divider="violet")
+    st.logo(LOGO_URL)
+    st.header("SuperDuper App Demo: NVCA Legal Docs - RAG")
     set_session_state()
     db = st.cache_resource(setup_db)(reset=reset)
     st.write(templates.load_css(), unsafe_allow_html=True)
