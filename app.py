@@ -18,7 +18,7 @@ from backend import (
 )
 
 IP = os.environ.get("PDF_FILE_SERVICE_HOST", "localhost")
-def add_logo(width=400):
+def add_logo(width=300):
     LOGO_URL = "https://superduperdb-public-demo.s3.amazonaws.com/superduper_logo.svg"
     st.markdown(
         f"""
